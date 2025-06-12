@@ -1,8 +1,6 @@
 name: Docker
 
 on:
-  schedule:
-    - cron: '31 2 * * *'
   push:
     branches: [ "main" ]
     tags: [ 'v*.*.*' ]
@@ -50,7 +48,6 @@ jobs:
           tags: |
             type=raw,value=latest
             type=ref,event=branch
-            type=ref,event=tag
 
       - name: Build and push Docker image
         id: build-and-push
