@@ -73,7 +73,7 @@ However, all your EasyEngine data and websites remain **intact** on the host und
 
 ## Reusing EasyEngine
 
-Whenever you need to use EasyEngine, just **rerun the [`docker run` debloy](https://github.com/dinhngocdung/easyengine-container/edit/main/README.md#how-to-deploy) command** to launch a new container environment instantly.
+Whenever you need to use EasyEngine, just **rerun the [`docker run` debloy](#how-to-deploy) command** to launch a new container environment instantly.
 
 
 ## What’s in this Repo?
