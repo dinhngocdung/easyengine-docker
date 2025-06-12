@@ -11,5 +11,5 @@ docker run -it --rm --privileged \
   -v /opt/easyengine:/opt/easyengine \
   --network host \
   -w /opt/easyengine \
-  ghcr.io/dinhngocdung/easyengine-container /bin/bash
+  ghcr.io/dinhngocdung/easyengine-container:main /bin/bash
 ```
