@@ -1,4 +1,4 @@
-# easyengine-container
+# EasyEngine container
 Install EasyEngine by Docker container, on any Distribution Linux with Docker installed.
 
 Install:
