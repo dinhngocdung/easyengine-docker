@@ -20,7 +20,7 @@ RUN curl -L https://github.com/docker/compose/releases/download/v2.27.0/docker-c
     && chmod +x /usr/local/bin/docker-compose
 
 # Cài đặt EasyEngine
-RUN curl -o /usr/local/bin/ee https://raw.githubusercontent.com/EasyEngine/easyengine-builds/master/phar/easyengine.phar \
+RUN curl -o /usr/local/bin/ee https://github.com/dinhngocdung/easyengine/releases/download/v4.8.1-custom-20250618-5cadaa8/easyengine.phar \
     && chmod +x /usr/local/bin/ee
     
 # Cài đặt EasyEngine Tab Completion
