@@ -22,6 +22,10 @@ RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-c
 RUN curl -L -o /usr/local/bin/ee https://github.com/dinhngocdung/easyengine/releases/latest/download/easyengine.phar \
     && chmod +x /usr/local/bin/ee
 
+# Install EasyEngine Tab Completion
+RUN curl -sL -o ~/.ee-completion.bash https://raw.githubusercontent.com/EasyEngine/easyengine/master/utils/ee-completion.bash \
+    && echo 'source ~/.ee-completion.bash' >> ~/.bash_profile
+
 # Create working directory
 RUN mkdir -p /opt/easyengine
 WORKDIR /opt/easyengine
