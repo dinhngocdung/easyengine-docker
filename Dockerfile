@@ -1,11 +1,12 @@
 FROM ubuntu:latest
 
-# Install dependencies
+# Cài đặt các phụ thuộc
 RUN apt-get update && apt-get install -y \
     curl \
     which \
     rsync \
-    docker.io \
+    bash-completion \
+	docker.io \
     php \
     php-cli \
     php-curl \
@@ -14,21 +15,23 @@ RUN apt-get update && apt-get install -y \
     php-posix \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install docker-compose v1.29.2
+# Cài đặt docker-compose v1.29.2
 RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
     && chmod +x /usr/local/bin/docker-compose
 
-# Install EasyEngine customzed for container
-RUN curl -L -o /usr/local/bin/ee https://github.com/dinhngocdung/easyengine/releases/latest/download/easyengine.phar \
+# Cài đặt EasyEngine
+RUN curl -o /usr/local/bin/ee https://raw.githubusercontent.com/EasyEngine/easyengine-builds/master/phar/easyengine.phar \
     && chmod +x /usr/local/bin/ee
+    
+# Cài đặt EasyEngine Tab Completion
+RUN curl -sL -o /etc/bash_completion.d/ee \
+       https://raw.githubusercontent.com/EasyEngine/easyengine/master/utils/ee-completion.bash \
+    && chmod +x /etc/bash_completion.d/ee \
+    && echo '[ -f /etc/bash_completion.d/ee ] && . /etc/bash_completion.d/ee' >> /root/.bashrc
 
-# Install EasyEngine Tab Completion
-RUN curl -sL -o /etc/bash_completion.d/ee-completion.bash https://raw.githubusercontent.com/EasyEngine/easyengine/master/utils/ee-completion.bash
-
-
-# Create working directory
+# Tạo thư mục làm việc
 RUN mkdir -p /opt/easyengine
 WORKDIR /opt/easyengine
 
-# Set entrypoint to bash
+# Thiết lập entrypoint là bash
 CMD ["/bin/bash"]
