@@ -23,8 +23,8 @@ RUN curl -L -o /usr/local/bin/ee https://github.com/dinhngocdung/easyengine/rele
     && chmod +x /usr/local/bin/ee
 
 # Install EasyEngine Tab Completion
-RUN curl -sL -o ~/.ee-completion.bash https://raw.githubusercontent.com/EasyEngine/easyengine/master/utils/ee-completion.bash \
-    && echo 'source ~/.ee-completion.bash' >> ~/.bash_profile
+RUN curl -sL -o /etc/bash_completion.d/ee-completion.bash https://raw.githubusercontent.com/EasyEngine/easyengine/master/utils/ee-completion.bash
+
 
 # Create working directory
 RUN mkdir -p /opt/easyengine
