@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     which \
     rsync \
     bash-completion \
+    tmux \
     docker.io \
     php \
     php-cli \

@@ -19,8 +19,13 @@ Check if Docker is installed:
 docker version
 ```
 
-If not, follow the official guide:
-👉 [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/)
+## What’s in this easyengine image docker?
+1. Ubuntu base (latest)
+2. Docker compose v2.27.0
+3. PHP
+4. EasyEngine (customzed for container)
+5. Easyengine Tab Completion
+6. `tmux`, `rsync`
 
 ## How to Deploy
 
