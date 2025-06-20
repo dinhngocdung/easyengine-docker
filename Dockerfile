@@ -34,5 +34,8 @@ RUN curl -sL -o /etc/bash_completion.d/ee \
 RUN mkdir -p /opt/easyengine
 WORKDIR /opt/easyengine
 
+# Customize prompt
+RUN echo 'PS1="[\[\e[37m\]\u@ee-container: \w\[\e[0m\]]\$ "' >> /root/.bashrc
+
 # Set entrypoint to bash
 CMD ["/bin/bash"]
