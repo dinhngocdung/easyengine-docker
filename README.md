@@ -80,6 +80,17 @@ However, all your EasyEngine data and websites remain **intact** on the host und
 
 Whenever you need to use EasyEngine, just **rerun the [`docker run` debloy](#how-to-deploy) command** to launch a new container environment instantly.
 
+Create shortly alias `ee` for run ee-container :
+```bash
+echo "alias ee='sudo docker run -it --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock:z -v /var/lib/docker/volumes:/var/lib/docker/volumes -v /opt/easyengine:/opt/easyengine -v /etc/localtime:/etc/localtime:ro -v /opt/easyengine/.ssh-key:/root/.ssh --network host --name ee-container dinhngocdung/easyengine:latest'" >> $HOME/.bashrc && source ~/.bashrc
+```
+And then:
+```bash
+ee # run ee-container
+
+exit # exit and remove ee-container
+```
+
 ## What’s in this Repo?
 
 * A `Dockerfile` for building the `dinhngocdung/easyengine:latest` image
