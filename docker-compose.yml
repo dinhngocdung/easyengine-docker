@@ -1,0 +1,14 @@
+services:
+  ee-container:
+    image: dinhngocdung/easyengine:latest
+    container_name: ee-container
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:z
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+      - /opt/easyengine:/opt/easyengine
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/easyengine/.ssh-key:/root/.ssh
+    network_mode: host
