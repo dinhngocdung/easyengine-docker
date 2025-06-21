@@ -80,10 +80,7 @@ However, all your EasyEngine data and websites remain **intact** on the host und
 Whenever you need to use EasyEngine, just **rerun the [`docker run` debloy](#how-to-deploy) command** to launch a new container environment instantly.
 
 
-## Docker Compose
-
-
-### 1\.  Download the `docker-compose.yml` file
+## Use Docker Compose
 
 First, download the `docker-compose.yml` configuration file to `~/easyengine` :
 
@@ -91,8 +88,6 @@ First, download the `docker-compose.yml` configuration file to `~/easyengine` :
 mkdir -p ~/easyengine && \
 curl -o ~/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-container/master/docker-compose.yml
 ```
-
-### 2\. Use `ee-container`
 
 To run the container and start using EasyEngine
 
@@ -105,7 +100,7 @@ sudo docker compose run --rm ee-container
 
 For more convenience, you can create an **`ee` alias**. This alias helps you run the EasyEngine Container without typing the long command every time.
 
-### 1. Add the alias to your `.bashrc` file:
+**1. Add the alias to your `.bashrc` file:**
 
 If use *docker compose*:
 ```bash
@@ -117,7 +112,7 @@ If use *docker run*:
 echo "alias ee='sudo docker run -it --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock:z -v /var/lib/docker/volumes:/var/lib/docker/volumes -v /opt/easyengine:/opt/easyengine -v /etc/localtime:/etc/localtime:ro -v /opt/easyengine/.ssh-key:/root/.ssh --network host --name ee-container dinhngocdung/easyengine:latest'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
 ```
 
-### 2. To enter the container and interact:
+**2. To enter the container and interact:**
 After creating the alias, you can use `ee` like a normal command:
 
 ```bash
@@ -134,7 +129,7 @@ ee cron list --all
 exit
 ```
 
-**To run a single `ee` command:**
+**3. To run a single `ee` command:**
 
 If you just want to run a command and then exit, EasyEngine will automatically open the container, run the command, and remove the container. For example:
 
