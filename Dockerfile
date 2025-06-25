@@ -1,5 +1,11 @@
 FROM ubuntu:latest
 
+LABEL org.opencontainers.image.authors="Đinh Ngọc Dũng"
+LABEL org.opencontainers.image.title="ee-container"
+LABEL org.opencontainers.image.version="4.8.1"
+LABEL org.opencontainers.image.description="Easyengine in Docker"
+LABEL org.label-schema.url="https://easyengine.pages.dev/notes/in-container/"
+
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     curl \
