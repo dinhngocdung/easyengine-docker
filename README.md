@@ -3,10 +3,10 @@
 ## Quick guide
 
 ```bash
-# Ready to run ee-container with alias ee
+# Ready to run easyengine with alias ee
 mkdir -p ~/easyengine && \
-curl -o ~/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-container/master/docker-compose.yml && \
-echo -e "\n\nalias ee='sudo docker compose -f $HOME/easyengine/docker-compose.yml run --rm ee-container'" >> ~/.bashrc && source ~/.bashrc
+curl -o ~/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/master/docker-compose.yml && \
+echo -e "\n\nalias ee='sudo docker compose -f $HOME/easyengine/docker-compose.yml run --rm easyengine'" >> ~/.bashrc && source ~/.bashrc
 
 # Run ee-containr, and use easyeinge command
 ee
@@ -53,7 +53,7 @@ docker run -it --rm --privileged \
   -v /etc/localtime:/etc/localtime:ro \
   -v /opt/easyengine/.ssh-key:/root/.ssh \
   --network host \
-  --name ee-container \
+  --name easyengine \
   dinhngocdung/easyengine:latest
 ```
 
@@ -70,7 +70,7 @@ docker run -it --rm --privileged \
 
 ## How to Use
 
-Once inside the container (`ee-container`), you can use EasyEngine commands as usual.
+Once inside the container (`easyengine`), you can use EasyEngine commands as usual.
 
 Example Commands:
 
@@ -100,14 +100,14 @@ First, download the `docker-compose.yml` configuration file to `~/easyengine` :
 
 ```bash
 mkdir -p ~/easyengine && \
-curl -o ~/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-container/master/docker-compose.yml
+curl -o ~/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/master/docker-compose.yml
 ```
 
 To run the container and start using EasyEngine
 
 ```bash
 cd ~/easyengine
-sudo docker compose run --rm ee-container
+sudo docker compose run --rm easyengine
 ```
 
 ## Use `ee` Alias
@@ -118,22 +118,22 @@ For more convenience, you can create an **`ee` alias**. This alias helps you run
 
 If use *docker compose*:
 ```bash
-echo -e "\n\nalias ee='sudo docker compose -f $HOME/easyengine/docker-compose.yml run --rm ee-container'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
+echo -e "\n\nalias ee='sudo docker compose -f $HOME/easyengine/docker-compose.yml run --rm easyengine'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
 ```
 
 If use *docker run*:
 ```bash
-echo "alias ee='sudo docker run -it --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock:z -v /var/lib/docker/volumes:/var/lib/docker/volumes -v /opt/easyengine:/opt/easyengine -v /etc/localtime:/etc/localtime:ro -v /opt/easyengine/.ssh-key:/root/.ssh --network host --name ee-container dinhngocdung/easyengine:latest'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
+echo "alias ee='sudo docker run -it --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock:z -v /var/lib/docker/volumes:/var/lib/docker/volumes -v /opt/easyengine:/opt/easyengine -v /etc/localtime:/etc/localtime:ro -v /opt/easyengine/.ssh-key:/root/.ssh --network host --name easyengine dinhngocdung/easyengine:latest'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
 ```
 
 **2. To enter the container and interact:**
 After creating the alias, you can use `ee` like a normal command:
 
 ```bash
-# Star run ee-container
+# Star run easyengine
 ee
 
-# You'll again see the prompt `[root@ee-container: /opt/easyengine]$`. 
+# You'll again see the prompt `[root@easyengine: /opt/easyengine]$`. 
 # you can run EasyEngine commands such as:
 ee site list
 ee site create sample.com
@@ -161,9 +161,9 @@ ee ee site clean sample.com
 
 ## Sync/Clone
 
-`Sync/Clone` is designed for interaction between EasyEngine installations directly on the host. For these commands to work with `ee-container`, you need the following:
+`Sync/Clone` is designed for interaction between EasyEngine installations directly on the host. For these commands to work with `easyengine`, you need the following:
 
-### Local ee-container
+### Local easyengine
 
 Create ssh-key for connect remote easyengine
 
@@ -172,7 +172,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
 ssh-copy-id -i ~/.ssh/id_ed25519.pub YOUR-USER@YOUR-REMOTE-SERVER.com
 ```
 
-### Remote ee-containerr Host
+### Remote easyengine Host
 
 If remote easyeinge on remote host, it normaly. And if user `root` locked, also easyengine clone reque connect by root, you must forward `YOUR-USER` to `root`:
  ```bash
@@ -183,14 +183,14 @@ If remote easyeinge on remote host, it normaly. And if user `root` locked, also 
  ```bash
  command="if [ -n \"$SSH_ORIGINAL_COMMAND\" ]; then sudo -i bash -c \"$SSH_ORIGINAL_COMMAND\"; else sudo -i; fi" ssh-....
  ```
-If remote easyengine also on container, you need foward ssh into `ee-container`
+If remote easyengine also on container, you need foward ssh into `easyengine`
 
 1.  Create a bash Script `/usr/local/bin/ssh_to_ee_container.sh` to forward `ssh` and `rsync` commands:
     ```bash
     #!/bin/bash
 
     # Name of the Docker container you want to connect to
-    CONTAINER_NAME="ee-container"
+    CONTAINER_NAME="easyengine"
 
     # Check if a command was passed via SSH_ORIGINAL_COMMAND
     if [ -n "$SSH_ORIGINAL_COMMAND" ]; then
@@ -215,4 +215,4 @@ If remote easyengine also on container, you need foward ssh into `ee-container`
 ## Reference
 - EasyEngine [Official Site](https://easyengine.io/)
 - My [Easyengine Notes](https://easyengine.pages.dev/)
-- [Dockerfile](https://github.com/dinhngocdung/easyengine-container/blob/main/Dockerfile)
+- [Dockerfile](https://github.com/dinhngocdung/easyengine-docker/blob/main/Dockerfile)

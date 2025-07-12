@@ -1,10 +1,10 @@
 FROM ubuntu:latest
 
 LABEL org.opencontainers.image.authors="Đinh Ngọc Dũng"
-LABEL org.opencontainers.image.title="ee-container"
+LABEL org.opencontainers.image.title="easyengine-docker"
 LABEL org.opencontainers.image.version="4.8.1"
 LABEL org.opencontainers.image.description="Easyengine in Docker"
-LABEL org.label-schema.url="https://easyengine.pages.dev/notes/in-container/"
+LABEL org.label-schema.url="https://easyengine.pages.dev/notes/easyengine-docker/"
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -41,7 +41,7 @@ RUN mkdir -p /opt/easyengine
 WORKDIR /opt/easyengine
 
 # Customize prompt
-RUN echo 'PS1="[\[\e[37m\]\u@ee-container: \w\[\e[0m\]]\$ "' >> /root/.bashrc
+RUN echo 'PS1="[\[\e[37m\]easyengine: \w\[\e[0m\]]$ "' >> /root/.bashrc
 
 # Set entrypoint to bash
 CMD ["/bin/bash"]
