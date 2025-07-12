@@ -1,5 +1,5 @@
 services:
-  ee-container:
+  easyengine:
     image: dinhngocdung/easyengine:latest
     container_name: easyengine
     privileged: true
