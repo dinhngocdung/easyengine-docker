@@ -1,7 +1,7 @@
 services:
   ee-container:
     image: dinhngocdung/easyengine:latest
-    container_name: ee-container
+    container_name: easyengine
     privileged: true
     stdin_open: true
     tty: true

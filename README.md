@@ -163,7 +163,7 @@ ee ee site clean sample.com
 
 `Sync/Clone` is designed for interaction between EasyEngine installations directly on the host. For these commands to work with `easyengine`, you need the following:
 
-### Local easyengine
+### Local easyengine-docker
 
 Create ssh-key for connect remote easyengine
 
