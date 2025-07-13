@@ -1,4 +1,4 @@
-# EasyEngine in Container
+# EasyEngine Docker
 
 ## Quick guide
 
@@ -43,7 +43,7 @@ docker version
 
 ## How to Deploy
 
-Run the following command to launch the EasyEngine container:
+Run the following command to launch the EasyEngine Docker:
 
 ```bash
 docker run -it --rm --privileged \
@@ -112,7 +112,7 @@ sudo docker compose run --rm easyengine
 
 ## Use `ee` Alias
 
-For more convenience, you can create an **`ee` alias**. This alias helps you run the EasyEngine Container without typing the long command every time.
+For more convenience, you can create an **`ee` alias**. This alias helps you run the EasyEngine-Docker without typing the long command every time.
 
 **1. Add the alias to your `.bashrc` file:**
 
@@ -126,7 +126,7 @@ If use *docker run*:
 echo "alias ee='sudo docker run -it --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock:z -v /var/lib/docker/volumes:/var/lib/docker/volumes -v /opt/easyengine:/opt/easyengine -v /etc/localtime:/etc/localtime:ro -v /opt/easyengine/.ssh-key:/root/.ssh --network host --name easyengine dinhngocdung/easyengine:latest'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
 ```
 
-**2. To enter the container and interact:**
+**2. To enter the Easyengine Docker and interact:**
 After creating the alias, you can use `ee` like a normal command:
 
 ```bash
@@ -145,7 +145,7 @@ exit
 
 **3. To run a single `ee` command:**
 
-If you just want to run a command and then exit, EasyEngine will automatically open the container, run the command, and remove the container. For example:
+If you just want to run a command and then exit, EasyEngine will automatically open the Easyengine Docker, run the command, and remove the Easyengine Docker. For example:
 
 ```bash
 ee ee site list
