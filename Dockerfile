@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     rsync \
     rclone \
     zip \
-    7z \
+    p7zip-full \
     unzip \
     bash-completion \
     tmux \
