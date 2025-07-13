@@ -39,7 +39,7 @@ docker version
 3. PHP
 4. EasyEngine (customzed for container)
 5. Easyengine Tab Completion
-6. `tmux`, `rsync`
+6. `tmux`, `rsync`, `rclone`...
 
 ## How to Deploy
 
