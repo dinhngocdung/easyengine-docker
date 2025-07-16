@@ -35,13 +35,6 @@ jobs:
         id: read_version
         run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
 
-      # KHÔNG CẦN BƯỚC NÀY NỮA
-      # - name: Install cosign
-      #   if: github.event_name != 'pull_request'
-      #   uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
-      #   with:
-      #     cosign-release: 'v2.2.4'
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
 
@@ -63,7 +56,6 @@ jobs:
             type=raw,value=${{ env.VERSION }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
 
-      # --- THAY ĐỔI CHÍNH Ở ĐÂY ---
       # Build, push và ký image trong cùng một bước
       - name: Build, push, and sign Docker image
         id: build-and-push
@@ -73,16 +65,4 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Thêm dòng này sẽ tự động build provenance và ký image bằng Cosign
-          # Chữ ký sẽ được đính kèm vào image manifest thay vì tạo tag .sig
           provenance: true
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
-
-      # --- XÓA BỎ HOÀN TOÀN BƯỚC NÀY ---
-      # - name: Sign the published Docker image
-      #   if: ${{ github.event_name != 'pull_request' }}
-      #   env:
-      #     TAGS: ${{ steps.meta.outputs.tags }}
-      #     DIGEST: ${{ steps.build-and-push.outputs.digest }}
-      #   run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
