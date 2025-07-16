@@ -1,3 +1,5 @@
+<img src="https://easyengine.pages.dev/images/easyeengine-docker-gray.svg" alt="Easyengine-Docker" width="auto" height="500" style="display: block; margin-left: 0; margin-right: auto;">
+
 # EasyEngine Docker
 
 ## Quick guide
@@ -211,7 +213,7 @@ If remote easyengine also on container, you need foward ssh into `easyengine`
     ```bash
     command="/usr/local/bin/ssh_to_ee_container.sh" ssh-ed25519 AAAAB3NzaC1yc2EAAAADAQABAAABAQ... your_key_comment_or_email
     ```
-
+    
 ## Reference
 - EasyEngine [Official Site](https://easyengine.io/)
 - My [Easyengine Notes](https://easyengine.pages.dev/)
