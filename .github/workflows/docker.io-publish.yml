@@ -1,38 +1,22 @@
-name: Docker Hub publish
-
-on:
-  push:
-    branches: [ "main" ]
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
-
-env:
-  REGISTRY: docker.io
-  IMAGE_NAME: dinhngocdung/easyengine
-
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+      # Quyền này RẤT QUAN TRỌNG để cosign có thể ký image
       id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Thêm bước để đọc nội dung file VERSION và lưu vào biến môi trường
       - name: Read VERSION file
         id: read_version
         run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
 
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@v3.5.0
-        with:
-          cosign-release: 'v2.2.4'
+      # Bạn không cần bước cài đặt cosign riêng nữa, build-push-action sẽ tự xử lý
+      # - name: Install cosign ...
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.0.0
@@ -54,7 +38,8 @@ jobs:
             type=raw,value=${{ env.VERSION }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
 
-      - name: Build and push Docker image
+      # --- THAY ĐỔI Ở ĐÂY ---
+      - name: Build, push, and sign Docker image
         id: build-and-push
         uses: docker/build-push-action@v5.0.0
         with:
@@ -62,12 +47,13 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+          # Thêm dòng này sẽ tự động build provenance và ký image bằng Cosign
+          provenance: true 
 
-      - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+      # --- XÓA BỎ HOÀN TOÀN BƯỚC NÀY ---
+      # - name: Sign the published Docker image
+      #   if: ${{ github.event_name != 'pull_request' }}
+      #   env:
+      #     TAGS: ${{ steps.meta.outputs.tags }}
+      #     DIGEST: ${{ steps.build-and-push.outputs.digest }}
+      #   run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
