@@ -6,9 +6,9 @@
 
 ```bash
 # Ready to run easyengine with alias ee
-mkdir -p ~/easyengine && \
-curl -o ~/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/master/docker-compose.yml && \
-echo -e "\n\nalias ee='sudo docker compose -f $HOME/easyengine/docker-compose.yml run --rm easyengine'" >> ~/.bashrc && source ~/.bashrc
+sudo mkdir-p /opt/easyengine && \
+sudo curl -o /opt/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/master/docker-compose.yml && \
+echo -e "\n\nalias ee='sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine'" >> ~/.bashrc && source ~/.bashrc
 
 # Run ee-containr, and use easyeinge command
 ee
@@ -32,7 +32,7 @@ Docker must be installed and running
 Check if Docker is installed:
 
 ```bash
-docker version
+sudo docker version
 ```
 
 ## What’s in this easyengine image docker?
@@ -48,7 +48,7 @@ docker version
 Run the following command to launch the EasyEngine Docker:
 
 ```bash
-docker run -it --rm --privileged \
+sudo docker run -it --rm --privileged \
   -v /var/run/docker.sock:/var/run/docker.sock:z \
   -v /var/lib/docker/volumes:/var/lib/docker/volumes \
   -v /opt/easyengine:/opt/easyengine \
@@ -98,18 +98,17 @@ Whenever you need to use EasyEngine, just **rerun the [`docker run` debloy](#how
 
 ## Use Docker Compose
 
-First, download the `docker-compose.yml` configuration file to `~/easyengine` :
+First, download the `docker-compose.yml` configuration file to `/opt/easyengine` :
 
 ```bash
-mkdir -p ~/easyengine && \
-curl -o ~/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/master/docker-compose.yml
+sudo mkdir-p /opt/easyengine && \
+sudo curl -o /opt/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/master/docker-compose.yml
 ```
 
 To run the container and start using EasyEngine
 
 ```bash
-cd ~/easyengine
-sudo docker compose run --rm easyengine
+sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine
 ```
 
 ## Use `ee` Alias
@@ -120,7 +119,7 @@ For more convenience, you can create an **`ee` alias**. This alias helps you run
 
 If use *docker compose*:
 ```bash
-echo -e "\n\nalias ee='sudo docker compose -f $HOME/easyengine/docker-compose.yml run --rm easyengine'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
+echo -e "\n\nalias ee='sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
 ```
 
 If use *docker run*:
