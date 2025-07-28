@@ -1,12 +1,13 @@
 name: GitHub Container registry Publish
 
 on:
-  push:
-    branches: [ "main" ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
+on:
+  # Chạy khi có một GitHub Release mới được tạo
+  release:
+    types: [created]
+
+  # Chạy khi kích hoạt thủ công từ giao diện GitHub Actions
+  workflow_dispatch:
 
 env:
   # Use docker.io for Docker Hub if empty
