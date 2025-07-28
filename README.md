@@ -8,10 +8,12 @@
 # Ready to run easyengine with alias ee
 sudo mkdir-p /opt/easyengine && \
 sudo curl -o /opt/easyengine/docker-compose.yml https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/master/docker-compose.yml && \
-echo -e "\n\nalias ee='sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine'" >> ~/.bashrc && source ~/.bashrc
+sudo curl -o /opt/easyengine/easyengine-wrapper https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/refs/heads/main/easyengine-wrapper && \
+sudo chmod +x /opt/easyengine/easyengine-wrapper && \
+sudo ln -s /opt/easyengine/easyengine-wrapper /usr/local/bin/ee
 
-# Run ee-containr, and use easyeinge command
-ee
+# Use same way easyeinge command native, sample:
+ee cli info
 ```
 
 ## Deploy on any Linux distribution
@@ -111,48 +113,21 @@ To run the container and start using EasyEngine
 sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine
 ```
 
-## Use `ee` Alias
+## Use `ee` "native"
 
-For more convenience, you can create an **`ee` alias**. This alias helps you run the EasyEngine-Docker without typing the long command every time.
-
-**1. Add the alias to your `.bashrc` file:**
-
-If use *docker compose*:
+Create syslink warpper:
 ```bash
-echo -e "\n\nalias ee='sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
+sudo curl -o /opt/easyengine/easyengine-wrapper https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/refs/heads/main/easyengine-wrapper && \
+sudo chmod +x /opt/easyengine/easyengine-wrapper && \
+sudo ln -s /opt/easyengine/easyengine-wrapper /usr/local/bin/ee
 ```
-
-If use *docker run*:
+Then, you can run `ee` command same "native"
 ```bash
-echo "alias ee='sudo docker run -it --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock:z -v /var/lib/docker/volumes:/var/lib/docker/volumes -v /opt/easyengine:/opt/easyengine -v /etc/localtime:/etc/localtime:ro -v /opt/easyengine/.ssh-key:/root/.ssh --network host --name easyengine dinhngocdung/easyengine:latest'" >> "$HOME/.bashrc" && source "$HOME/.bashrc"
-```
-
-**2. To enter the Easyengine Docker and interact:**
-After creating the alias, you can use `ee` like a normal command:
-
-```bash
-# Star run easyengine
-ee
-
-# You'll again see the prompt `[root@easyengine: /opt/easyengine]$`. 
-# you can run EasyEngine commands such as:
+#you can run EasyEngine commands such as:
 ee site list
 ee site create sample.com
 ee cron list --all
-
-# Type `exit` when you want to quit.
-exit
 ```
-
-**3. To run a single `ee` command:**
-
-If you just want to run a command and then exit, EasyEngine will automatically open the Easyengine Docker, run the command, and remove the Easyengine Docker. For example:
-
-```bash
-ee ee site list
-ee ee site clean sample.com
-```
-
 
 ## What’s in this Repo?
 
