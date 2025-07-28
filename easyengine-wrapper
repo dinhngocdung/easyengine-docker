@@ -1,0 +1,6 @@
+#!/bin/sh
+
+sudo docker compose \
+-f /opt/easyengine/docker-compose.yml \
+run --rm easyengine \
+ee "$@"
