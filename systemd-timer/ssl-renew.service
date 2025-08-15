@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew SSL for all sites with EasyEngine
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -c "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin && /usr/bin/docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine ee site ssl-renew --all"
+StandardOutput=append:/opt/easyengine/logs/cron.log
+StandardError=append:/opt/easyengine/logs/cron.log
