@@ -2,7 +2,7 @@ FROM ubuntu:latest
 
 LABEL org.opencontainers.image.authors="Đinh Ngọc Dũng"
 LABEL org.opencontainers.image.title="easyengine-docker"
-LABEL org.opencontainers.image.version="4.9.0"
+LABEL org.opencontainers.image.version="latest"
 LABEL org.opencontainers.image.description="Easyengine in Docker"
 LABEL org.label-schema.url="https://easyengine.pages.dev/notes/easyengine-docker/"
 
