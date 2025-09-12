@@ -11,4 +11,5 @@ services:
       - /opt/easyengine:/opt/easyengine
       - /etc/localtime:/etc/localtime:ro
       - /opt/easyengine/.ssh-key:/root/.ssh
+      - /etc/hosts:/etc/hosts
     network_mode: host
