@@ -53,17 +53,29 @@ jobs:
             $content = file_get_contents($file);
             $patch = file_get_contents("../main-docker/templates/site-utils-patch.txt");
             
-            // Regex tìm khối hàm bao gồm cả DocBlock (ghi chú /** */)
-            $pattern = "/\/\*\*.*?\*\/.*?function remove_etc_hosts_entry\s*\(.*?\)\s*\{.*?\n\}/s";
+            // 1. Tìm vị trí bắt đầu của hàm cần thay thế
+            $functionName = "function remove_etc_hosts_entry";
+            $startPos = strpos($content, $functionName);
             
-            if (preg_match($pattern, $content)) {
-                $updated = preg_replace($pattern, $patch, $content);
-                file_put_contents($file, $updated);
-                echo "Patch site-utils applied successfully.\n";
-            } else {
-                echo "Error: Pattern not found in site-utils.php\n";
-                exit(1);
+            if ($startPos === false) {
+                echo "Error: Function not found.\n"; exit(1);
             }
+
+            // 2. Tìm ngược lên trên để lấy phần DocBlock (ghi chú /**)
+            $docBlockPos = strrpos(substr($content, 0, $startPos), "/**");
+            
+            // 3. Tìm dấu đóng ngoặc nhọn "}" cuối cùng của hàm đó
+            // Chúng ta tìm dấu } đầu tiên sau vị trí hàm
+            $endPos = strpos($content, "}", $startPos) + 1;
+
+            // 4. Thực hiện thay thế đoạn từ $docBlockPos đến $endPos
+            $before = substr($content, 0, $docBlockPos);
+            $after = substr($content, $endPos);
+            
+            $updated = $before . $patch . $after;
+            
+            file_put_contents($file, $updated);
+            echo "Patch applied precisely.\n";
           '
           git add .
           git commit -m "Auto-patch v${{ steps.check_version.outputs.ver }}: Docker compatibility"
