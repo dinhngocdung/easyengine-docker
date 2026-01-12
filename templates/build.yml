@@ -75,12 +75,10 @@ jobs:
           # Đẩy tag lên Remote (sử dụng --force để ghi đè nếu tag đã tồn tại)
           git push origin "${TAG_NAME}" --force
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Create / Update Release
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
           files: easyengine.phar
-          overwrite: true
-          token: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allow_updates: true
