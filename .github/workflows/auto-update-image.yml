@@ -5,7 +5,7 @@ permissions:
 
 on:
   schedule:
-    - cron: '0 0 */3 * *' # Chạy định kỳ 3 ngày một lần
+    - cron: '30 21 * * *' # Chạy định kỳ lúc 3:00 AM giờ Ấn Độ (IST) mỗi ngày
   workflow_dispatch:      # Cho phép bấm nút chạy thủ công để test
 
 jobs:
