@@ -1,4 +1,8 @@
 name: Auto-update easyengine-docker
+permissions:
+  contents: write
+  actions: read
+
 on:
   schedule:
     - cron: '0 0 */3 * *' # Chạy định kỳ 3 ngày một lần
@@ -19,7 +23,7 @@ jobs:
         run: |
           # Lấy version từ dự án gốc EasyEngine
           REMOTE=$(curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/develop/VERSION | xargs)
-          # Lấy version hiện tại trong repo docker của bạn
+          # Lấy version hiện tại trong repo docker của b��n
           LOCAL=$(cat main-docker/VERSION | xargs)
           
           if [ "$REMOTE" = "$LOCAL" ]; then
@@ -181,6 +185,11 @@ jobs:
           
           git add VERSION
           git commit -m "Bump version to $(cat VERSION)" || echo "No change in VERSION [skip ci]"
+
+          # Ensure push uses the PAT provided in GH_TOKEN (so it won't use github-actions[bot] default)
+          # Replace remote origin URL so git push uses the token
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+
           git push origin main
           
           # Kích hoạt build image cuối cùng và đợi kết quả
