@@ -78,7 +78,7 @@ jobs:
             echo "Patch applied precisely.\n";
           '
           git add .
-          git commit -m "Auto-patch v${{ steps.check_version.outputs.ver }}: Docker compatibility"
+          git commit -m "Auto-patch v${{ steps.check_version.outputs.ver }}: Docker compatibility [skip ci]"
           git push origin develop --force
 
       # 3. XỬ LÝ EASYENGINE (PATCH COMPOSER & BUILD PHAR)
@@ -103,7 +103,7 @@ jobs:
           jq -s '.[0] * .[1]' composer.json ../main-docker/templates/composer-patch.json > tmp.json && mv tmp.json composer.json
           
           git add .
-          git commit -m "Auto-sync v${{ steps.check_version.outputs.ver }}: Apply custom build config"
+          git commit -m "Auto-sync v${{ steps.check_version.outputs.ver }}: Apply custom build config [skip ci]"
           git push origin develop --force
           
           # Đợi build PHAR tại repo easyengine xong mới đi tiếp
@@ -180,7 +180,7 @@ jobs:
           cd main-docker
           
           git add VERSION
-          git commit -m "Bump version to $(cat VERSION)" || echo "No change in VERSION"
+          git commit -m "Bump version to $(cat VERSION)" || echo "No change in VERSION [skip ci]"
           git push origin main
           
           # Kích hoạt build image cuối cùng và đợi kết quả

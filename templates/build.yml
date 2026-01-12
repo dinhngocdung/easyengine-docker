@@ -76,9 +76,10 @@ jobs:
           git push origin "${TAG_NAME}" --force
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
           files: easyengine.phar
           token: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
-          overwrite: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
