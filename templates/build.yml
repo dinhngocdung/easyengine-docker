@@ -57,12 +57,23 @@ jobs:
       - name: Create Git tag
         id: tag
         run: |
-          # Sử dụng nội dung từ file VERSION và thêm "-custom"
+          # Lấy version từ file
           VERSION_FROM_FILE="${{ steps.get_version.outputs.VERSION_CONTENT }}"
           TAG_NAME="${VERSION_FROM_FILE}-custom"
           echo "TAG=${TAG_NAME}" >> $GITHUB_OUTPUT
+          
+          # Cấu hình Git để có thể thực hiện lệnh tag
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Xóa tag cục bộ nếu có
+          git tag -d "${TAG_NAME}" || true
+          
+          # Tạo tag mới
           git tag "${TAG_NAME}"
-          git push origin "${TAG_NAME}"
+          
+          # Đẩy tag lên Remote (sử dụng --force để ghi đè nếu tag đã tồn tại)
+          git push origin "${TAG_NAME}" --force
           
       - name: Create Release
         uses: softprops/action-gh-release@v1
