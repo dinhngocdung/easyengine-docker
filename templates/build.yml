@@ -1,0 +1,72 @@
+name: Build Custom EasyEngine
+
+on:
+  push:
+    branches: [ "develop" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Phar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Clean environment
+        run: |
+          rm -rf vendor composer.lock
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+          extensions: pcntl, curl, sqlite3, zip, dom, mbstring, json, phar
+
+      - name: Setup Composer authentication
+        run: |
+          composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          composer config --global --auth github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          composer config -g repo.packagist composer https://packagist.org
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-dev --no-progress --no-interaction --optimize-autoloader
+          composer dump-autoload --optimize --classmap-authoritative
+      - name: Prepare for PHAR build
+        run: |
+          # Copy required files to temporary directory
+          mkdir -p phar-build
+          cp -r php bin utils VERSION vendor phar-build/
+      - name: Build uncompressed PHAR
+        run: |
+          cd phar-build
+          php -dphar.readonly=0 ../utils/make-phar.php easyengine.phar --no-compression
+          chmod +x easyengine.phar
+          mv easyengine.phar ../
+          cd ..
+      - name: Test PHAR
+        run: |
+          php easyengine.phar cli info
+          
+      # Bước mới: Đọc nội dung file VERSION
+      - name: Read VERSION file content
+        id: get_version
+        run: echo "VERSION_CONTENT=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Create Git tag
+        id: tag
+        run: |
+          # Sử dụng nội dung từ file VERSION và thêm "-custom"
+          VERSION_FROM_FILE="${{ steps.get_version.outputs.VERSION_CONTENT }}"
+          TAG_NAME="${VERSION_FROM_FILE}-custom"
+          echo "TAG=${TAG_NAME}" >> $GITHUB_OUTPUT
+          git tag "${TAG_NAME}"
+          git push origin "${TAG_NAME}"
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          files: easyengine.phar
+          token: ${{ secrets.GITHUB_TOKEN }}

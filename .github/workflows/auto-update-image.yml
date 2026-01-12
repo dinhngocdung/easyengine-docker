@@ -1,0 +1,113 @@
+name: Auto update easyengine-docker
+on:
+  schedule:
+    - cron: '0 0 */3 * *' # Chạy định kỳ 3 ngày một lần
+  workflow_dispatch:      # Cho phép bấm nút chạy thủ công để test
+
+jobs:
+  automation-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Orchestrator (Docker Repo)
+        uses: actions/checkout@v4
+        with:
+          path: main-docker
+
+      # 1. KIỂM TRA PHIÊN BẢN MỚI TỪ EASYENGINE GỐC (NHÁNH DEVELOP)
+      - name: Check for New Version
+        id: check_version
+        run: |
+          # Lấy version từ dự án gốc EasyEngine
+          REMOTE=$(curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/develop/VERSION | xargs)
+          # Lấy version hiện tại trong repo docker của bạn
+          LOCAL=$(cat main-docker/VERSION | xargs)
+          
+          if [ "$REMOTE" = "$LOCAL" ]; then
+            echo "Version is up to date ($REMOTE). Skipping..."
+            echo "run=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version detected: $REMOTE"
+            echo "run=true" >> $GITHUB_OUTPUT
+            echo "ver=$REMOTE" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Git Config
+        if: steps.check_version.outputs.run == 'true'
+        run: |
+          git config --global user.name "EE-Bot"
+          git config --global user.email "bot@github.com"
+
+      # 2. XỬ LÝ SITE-COMMAND (PATCH HÀM TỪ FILE TEMPLATE .TXT)
+      - name: Sync & Patch Site-Command
+        if: steps.check_version.outputs.run == 'true'
+        run: |
+          git clone https://x-access-token:${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}@github.com/dinhngocdung/site-command.git sc
+          cd sc
+          git remote add upstream https://github.com/EasyEngine/site-command.git
+          git fetch upstream
+          git reset --hard upstream/develop
+          
+          # Dùng PHP để patch: đọc nội dung từ templates/site-utils-patch.txt
+          php -r '
+            $file = "src/helper/site-utils.php";
+            $content = file_get_contents($file);
+            $patch = file_get_contents("../main-docker/templates/site-utils-patch.txt");
+            
+            // Regex tìm khối hàm bao gồm cả DocBlock (ghi chú /** */)
+            $pattern = "/\/\*\*.*?\*\/.*?function remove_etc_hosts_entry\s*\(.*?\)\s*\{.*?\n\}/s";
+            
+            if (preg_match($pattern, $content)) {
+                $updated = preg_replace($pattern, $patch, $content);
+                file_put_contents($file, $updated);
+                echo "Patch site-utils applied successfully.\n";
+            } else {
+                echo "Error: Pattern not found in site-utils.php\n";
+                exit(1);
+            }
+          '
+          git add .
+          git commit -m "Auto-patch v${{ steps.check_version.outputs.ver }}: Docker compatibility"
+          git push origin develop --force
+
+      # 3. XỬ LÝ EASYENGINE (PATCH COMPOSER & BUILD PHAR)
+      - name: Sync & Patch EasyEngine
+        if: steps.check_version.outputs.run == 'true'
+        run: |
+          git clone https://x-access-token:${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}@github.com/dinhngocdung/easyengine.git ee
+          cd ee
+          git remote add upstream https://github.com/EasyEngine/easyengine.git
+          git fetch upstream
+          git reset --hard upstream/develop
+          
+          # Chép file workflow build phar từ template
+          mkdir -p .github/workflows
+          cp ../main-docker/templates/build.yml .github/workflows/build.yml
+          
+          # Merge composer-patch.json vào file gốc
+          jq -s '.[0] * .[1]' composer.json ../main-docker/templates/composer-patch.json > tmp.json && mv tmp.json composer.json
+          
+          git add .
+          git commit -m "Auto-sync v${{ steps.check_version.outputs.ver }}: Apply custom build config"
+          git push origin develop --force
+          
+          # Đợi build PHAR tại repo easyengine xong mới đi tiếp
+          gh workflow run build.yml --repo dinhngocdung/easyengine --ref develop --wait
+        env:
+          GH_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
+
+      # 4. ĐỒNG BỘ VERSION VÀ BUILD DOCKER IMAGE
+      - name: Finalize & Trigger Docker Build
+        if: steps.check_version.outputs.run == 'true'
+        run: |
+          # Đồng bộ file VERSION thực tế từ EE sang Docker
+          cp ee/VERSION main-docker/VERSION
+          cd main-docker
+          
+          git add VERSION
+          git commit -m "Bump version to $(cat VERSION)" || echo "No change in VERSION"
+          git push origin master
+          
+          # Kích hoạt build image cuối cùng và đợi kết quả
+          gh workflow run docker.io-publish.yml --ref master --wait
+        env:
+          GH_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
