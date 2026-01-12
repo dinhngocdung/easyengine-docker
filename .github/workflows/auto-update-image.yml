@@ -1,4 +1,4 @@
-name: Auto update easyengine-docker
+name: Auto-update easyengine-docker
 on:
   schedule:
     - cron: '0 0 */3 * *' # Chạy định kỳ 3 ngày một lần
