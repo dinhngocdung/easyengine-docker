@@ -1,6 +1,10 @@
 #!/bin/sh
+# Purpose: Routes 'ee' commands to Docker Compose
 
-sudo docker compose \
--f /opt/easyengine/docker-compose.yml \
-run --rm easyengine \
-ee "$@"
+    # Intercept 'ee cli update' to pull the latest image easyengine-docker
+if [ "$1" = "cli" ] && [ "$2" = "update" ]; then
+	sudo docker compose -f /opt/easyengine/docker-compose.yml pull
+else
+    # Execute standard ee commands inside a temporary container
+    sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm easyengine ee "$@"
+fi
