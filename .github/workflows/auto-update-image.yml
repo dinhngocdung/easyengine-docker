@@ -34,7 +34,7 @@ jobs:
       - name: Setup Git Config
         if: steps.check_version.outputs.run == 'true'
         run: |
-          git config --global user.name "EE-Bot"
+          git config --global user.name "EE-Update-Bot"
           git config --global user.email "bot@github.com"
 
       # 2. XỬ LÝ SITE-COMMAND (PATCH HÀM TỪ FILE TEMPLATE .TXT)
@@ -84,8 +84,12 @@ jobs:
       # 3. XỬ LÝ EASYENGINE (PATCH COMPOSER & BUILD PHAR)
       - name: Sync & Patch EasyEngine
         if: steps.check_version.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
         run: |
-          git clone https://x-access-token:${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}@github.com/dinhngocdung/easyengine.git ee
+          set -euo pipefail
+
+          git clone https://x-access-token:${GH_TOKEN}@github.com/dinhngocdung/easyengine.git ee
           cd ee
           git remote add upstream https://github.com/EasyEngine/easyengine.git
           git fetch upstream
@@ -103,14 +107,74 @@ jobs:
           git push origin develop --force
           
           # Đợi build PHAR tại repo easyengine xong mới đi tiếp
-          gh workflow run build.yml --repo dinhngocdung/easyengine --ref develop --wait
-        env:
-          GH_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
+          OWNER="dinhngocdung"
+          REPO="easyengine"
+          WORKFLOW_FILE="build.yml"
+          REF="develop"
+          API="https://api.github.com"
+          TOKEN="$GH_TOKEN"
+
+          start_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Dispatching workflow $WORKFLOW_FILE on $OWNER/$REPO@$REF (start_time=$start_time)..."
+
+          # Trigger workflow_dispatch
+          curl -s -X POST \
+            -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$API/repos/$OWNER/$REPO/actions/workflows/$WORKFLOW_FILE/dispatches" \
+            -d "{\"ref\":\"$REF\"}"
+
+          echo "Waiting for a workflow run to be created..."
+          # Find the run id that has head_branch == REF and created_at > start_time
+          run_id=""
+          for i in {1..60}; do        # ~ up to 10 minutes (60*10s); điều chỉnh nếu muốn
+            sleep 10
+            runs_json=$(curl -s -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
+              "$API/repos/$OWNER/$REPO/actions/runs?event=workflow_dispatch&per_page=50")
+            run_id=$(echo "$runs_json" | jq -r --arg ref "$REF" --arg start "$start_time" \
+              '.workflow_runs[] | select(.head_branch == $ref and .created_at > $start) | .id' | head -n1)
+
+            if [ -n "$run_id" ] && [ "$run_id" != "null" ]; then
+              echo "Found run id: $run_id"
+              break
+            fi
+            echo "No run yet, retrying... ($i)"
+          done
+
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "Timed out waiting for workflow run to be created."
+            exit 1
+          fi
+
+          # Poll the run status until completed
+          echo "Polling run $run_id status..."
+          while true; do
+            sleep 10
+            run_info=$(curl -s -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
+              "$API/repos/$OWNER/$REPO/actions/runs/$run_id")
+            status=$(echo "$run_info" | jq -r .status)
+            conclusion=$(echo "$run_info" | jq -r .conclusion)
+            echo "Status: $status, Conclusion: $conclusion"
+
+            if [ "$status" = "completed" ]; then
+              if [ "$conclusion" = "success" ]; then
+                echo "Workflow completed successfully."
+                break
+              else
+                echo "Workflow completed with conclusion: $conclusion"
+                exit 1
+              fi
+            fi
+          done
 
       # 4. ĐỒNG BỘ VERSION VÀ BUILD DOCKER IMAGE
       - name: Finalize & Trigger Docker Build
         if: steps.check_version.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
         run: |
+          set -euo pipefail
+
           # Đồng bộ file VERSION thực tế từ EE sang Docker
           cp ee/VERSION main-docker/VERSION
           cd main-docker
@@ -120,6 +184,61 @@ jobs:
           git push origin master
           
           # Kích hoạt build image cuối cùng và đợi kết quả
-          gh workflow run docker.io-publish.yml --ref master --wait
-        env:
-          GH_TOKEN: ${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}
+          OWNER="dinhngocdung"
+          REPO="easyengine-docker"
+          WORKFLOW_FILE="docker.io-publish.yml"
+          REF="master"
+          API="https://api.github.com"
+          TOKEN="$GH_TOKEN"
+
+          start_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Dispatching workflow $WORKFLOW_FILE on $OWNER/$REPO@$REF (start_time=$start_time)..."
+
+          # Trigger workflow_dispatch
+          curl -s -X POST \
+            -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$API/repos/$OWNER/$REPO/actions/workflows/$WORKFLOW_FILE/dispatches" \
+            -d "{\"ref\":\"$REF\"}"
+
+          echo "Waiting for a workflow run to be created..."
+          run_id=""
+          for i in {1..90}; do
+            sleep 10
+            runs_json=$(curl -s -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
+              "$API/repos/$OWNER/$REPO/actions/runs?event=workflow_dispatch&per_page=50")
+            run_id=$(echo "$runs_json" | jq -r --arg ref "$REF" --arg start "$start_time" \
+              '.workflow_runs[] | select(.head_branch == $ref and .created_at > $start) | .id' | head -n1)
+
+            if [ -n "$run_id" ] && [ "$run_id" != "null" ]; then
+              echo "Found run id: $run_id"
+              break
+            fi
+            echo "No run yet, retrying... ($i)"
+          done
+
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "Timed out waiting for workflow run to be created."
+            exit 1
+          fi
+
+          # Poll the run status until completed
+          echo "Polling run $run_id status..."
+          while true; do
+            sleep 10
+            run_info=$(curl -s -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
+              "$API/repos/$OWNER/$REPO/actions/runs/$run_id")
+            status=$(echo "$run_info" | jq -r .status)
+            conclusion=$(echo "$run_info" | jq -r .conclusion)
+            echo "Status: $status, Conclusion: $conclusion"
+
+            if [ "$status" = "completed" ]; then
+              if [ "$conclusion" = "success" ]; then
+                echo "Workflow completed successfully."
+                break
+              else
+                echo "Workflow completed with conclusion: $conclusion"
+                exit 1
+              fi
+            fi
+          done
