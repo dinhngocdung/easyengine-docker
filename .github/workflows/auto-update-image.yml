@@ -181,13 +181,13 @@ jobs:
           
           git add VERSION
           git commit -m "Bump version to $(cat VERSION)" || echo "No change in VERSION"
-          git push origin master
+          git push origin main
           
           # Kích hoạt build image cuối cùng và đợi kết quả
           OWNER="dinhngocdung"
           REPO="easyengine-docker"
           WORKFLOW_FILE="docker.io-publish.yml"
-          REF="master"
+          REF="main"
           API="https://api.github.com"
           TOKEN="$GH_TOKEN"
 
