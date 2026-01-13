@@ -2,8 +2,8 @@ name: GitHub Container registry Publish
 
 on:
   # Chạy khi có một GitHub Release mới được tạo
-  release:
-    types: [created]
+  #release:
+  #  types: [created]
 
   # Chạy khi kích hoạt thủ công từ giao diện GitHub Actions
   workflow_dispatch:
