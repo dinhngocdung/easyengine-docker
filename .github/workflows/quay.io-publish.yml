@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: quay.io
-  IMAGE_NAME: dung/ee
+  IMAGE_NAME: dinhngocdung/easyengine
 
 jobs:
   build:
