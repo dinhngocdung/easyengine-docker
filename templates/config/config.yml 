@@ -1,0 +1,3 @@
+locale: en_US
+ee_installer_version: stable
+rclone-path: local:/opt/easyengine/backup/
