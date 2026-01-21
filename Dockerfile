@@ -42,6 +42,16 @@ RUN curl -sL -o /etc/bash_completion.d/ee \
 
 # Create working directory
 RUN mkdir -p /opt/easyengine
+# Tạo thư mục cấu hình và copy các file mẫu vào image
+RUN mkdir -p /opt/easyengine/config/rclone
+
+# Copy default local backup config files from repository into image
+COPY templates/config/rclone/rclone.conf /opt/easyengine/config/rclone/rclone.conf
+COPY templates/config/config.yml /opt/easyengine/config/config.yml
+
+# Set permissions
+RUN chmod 644 /opt/easyengine/config/rclone/rclone.conf /opt/easyengine/config/config.yml || true
+
 WORKDIR /opt/easyengine
 
 # Customize prompt
