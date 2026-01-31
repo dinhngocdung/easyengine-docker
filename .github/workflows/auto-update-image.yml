@@ -98,6 +98,12 @@ jobs:
           git remote add upstream https://github.com/EasyEngine/easyengine.git
           git fetch upstream
           git reset --hard upstream/develop
+
+          # Xóa file test_and_build.yml nếu tồn tại
+          if [ -f ".github/workflows/test_and_build.yml" ]; then
+            rm .github/workflows/test_and_build.yml
+            echo "Deleted old test_and_build.yml"
+          fi
           
           # Chép file workflow build phar từ template
           mkdir -p .github/workflows
