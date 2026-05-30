@@ -8,16 +8,22 @@ else
     SITE_DOMAIN=$(pwd | sed -n 's|.*/sites/\([^/]*\).*|\1|p')
 
     if [ -n "$SITE_DOMAIN" ]; then
+        # site subcommands that require a domain argument
+        SITE_DOMAIN_CMDS="info update delete enable disable reload restart"
+
         if [ "$1" = "site" ] && [ $# -eq 2 ]; then
-            # ee site info/update/delete -> inject domain as 3rd arg
-            set -- "$1" "$2" "$SITE_DOMAIN"
+            for cmd in $SITE_DOMAIN_CMDS; do
+                if [ "$2" = "$cmd" ]; then
+                    set -- "$1" "$2" "$SITE_DOMAIN"
+                    break
+                fi
+            done
         elif [ "$1" = "shell" ]; then
-            # Check if domain not already passed (no arg without leading --)
             HAS_DOMAIN=0
             for arg in "$@"; do
                 case "$arg" in
-                    --*) ;;  # skip flags
-                    shell) ;; # skip subcommand itself
+                    --*) ;;
+                    shell) ;;
                     *) HAS_DOMAIN=1 ;;
                 esac
             done
