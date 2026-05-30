@@ -7,15 +7,23 @@ else
     # Extract site domain from current host path
     SITE_DOMAIN=$(pwd | sed -n 's|.*/sites/\([^/]*\).*|\1|p')
 
-    # Commands that accept <site-name> as argument
-    # ee site <subcommand> [domain] and ee shell [domain]
     if [ -n "$SITE_DOMAIN" ]; then
         if [ "$1" = "site" ] && [ $# -eq 2 ]; then
             # ee site info/update/delete -> inject domain as 3rd arg
             set -- "$1" "$2" "$SITE_DOMAIN"
-        elif [ "$1" = "shell" ] && [ $# -eq 1 ]; then
-            # ee shell -> inject domain
-            set -- "$1" "$SITE_DOMAIN"
+        elif [ "$1" = "shell" ]; then
+            # Check if domain not already passed (no arg without leading --)
+            HAS_DOMAIN=0
+            for arg in "$@"; do
+                case "$arg" in
+                    --*) ;;  # skip flags
+                    shell) ;; # skip subcommand itself
+                    *) HAS_DOMAIN=1 ;;
+                esac
+            done
+            if [ "$HAS_DOMAIN" = "0" ]; then
+                set -- "$1" "$SITE_DOMAIN" "${@:2}"
+            fi
         fi
     fi
 
