@@ -1,38 +1,11 @@
 #!/bin/sh
-# Purpose: Routes 'ee' commands to Docker Compose
-
 if [ "$1" = "cli" ] && [ "$2" = "update" ]; then
     sudo docker compose -f /opt/easyengine/docker-compose.yml pull
-else
-    # Extract site domain from current host path
-    SITE_DOMAIN=$(pwd | sed -n 's|.*/sites/\([^/]*\).*|\1|p')
-
-    if [ -n "$SITE_DOMAIN" ]; then
-        # site subcommands that require a domain argument
-        SITE_DOMAIN_CMDS="info update delete enable disable reload restart"
-
-        if [ "$1" = "site" ] && [ $# -eq 2 ]; then
-            for cmd in $SITE_DOMAIN_CMDS; do
-                if [ "$2" = "$cmd" ]; then
-                    set -- "$1" "$2" "$SITE_DOMAIN"
-                    break
-                fi
-            done
-        elif [ "$1" = "shell" ]; then
-            HAS_DOMAIN=0
-            for arg in "$@"; do
-                case "$arg" in
-                    --*) ;;
-                    shell) ;;
-                    *) HAS_DOMAIN=1 ;;
-                esac
-            done
-            if [ "$HAS_DOMAIN" = "0" ]; then
-                set -- "$1" "$SITE_DOMAIN" "${@:2}"
-            fi
-        fi
-    fi
-
-    sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm \
-        easyengine ee "$@"
+    exit 0
 fi
+
+# Quote từng argument đúng cách trước khi truyền vào sh -c
+ARGS=$(printf ' %q' "$@")
+
+sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm \
+    easyengine sh -c "cd '$(pwd -L)' && ee$ARGS"
