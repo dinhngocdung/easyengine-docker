@@ -186,23 +186,25 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Lưu version cũ trước khi cập nhật
+          cd main-docker
+          
+          # LƯU VERSION CŨ TRƯỚC KHI CẬP NHẬT
           OLD_VERSION="${{ steps.check_version.outputs.old_ver }}"
           echo "Saved old version: $OLD_VERSION"
-
-          # Đồng bộ VERSION trực tiếp từ repo EasyEngine gốc
-          curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/develop/VERSION -o main-docker/VERSION
           
-          cd main-docker
-          git add VERSION
-          git commit -m "Bump version to $(cat VERSION) [skip ci]" || echo "No change in VERSION"
+          # Đồng bộ VERSION trực tiếp từ repo EasyEngine gốc
+          curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/develop/VERSION -o VERSION
+          NEW_VERSION=$(cat VERSION | xargs)
+          echo "New version fetched: $NEW_VERSION"
+          
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          git push origin main
           
           # Hàm helper dispatch_and_wait
           dispatch_and_wait() {
             OWNER="$1"; REPO="$2"; WORKFLOW_FILE="$3"; REF="$4"; TOKEN="$5"; API="https://api.github.com"
             start_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            
+            echo "Triggering $WORKFLOW_FILE on $OWNER/$REPO@$REF..."
             curl -s -X POST -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
               "$API/repos/$OWNER/$REPO/actions/workflows/$WORKFLOW_FILE/dispatches" -d "{\"ref\":\"$REF\"}"
             
@@ -214,27 +216,46 @@ jobs:
               [ -n "$run_id" ] && [ "$run_id" != "null" ] && break
             done
 
+            if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+              echo "Error: Failed to find workflow run"
+              return 1
+            fi
+
+            echo "Found run: $run_id"
             while true; do
               sleep 15
               info=$(curl -s -H "Authorization: token $TOKEN" "$API/repos/$OWNER/$REPO/actions/runs/$run_id")
               status=$(echo "$info" | jq -r .status)
               conclusion=$(echo "$info" | jq -r .conclusion)
+              echo "Status: $status, Conclusion: $conclusion"
+              
               if [ "$status" = "completed" ]; then
-                [ "$conclusion" = "success" ] && return 0 || return 1
+                if [ "$conclusion" = "success" ]; then
+                  echo "Workflow completed successfully"
+                  return 0
+                else
+                  echo "Workflow failed with conclusion: $conclusion"
+                  return 1
+                fi
               fi
             done
           }
 
+          # CẬP NHẬT VERSION TRONG GIT
+          git add VERSION
+          git commit -m "Bump version to $NEW_VERSION [skip ci]" || echo "No change in VERSION"
+          git push origin main
+          
           # Gọi duy nhất workflow tổng hợp publish-docker.yml
           echo "Triggering consolidated publish workflow..."
           if dispatch_and_wait "dinhngocdung" "easyengine-docker" "publish-docker.yml" "main" "${GH_TOKEN}"; then
             echo "✓ All registries updated via publish-docker.yml"
           else
-            echo "✗ Docker build FAILED. Reverting VERSION to $OLD_VERSION..."
+            echo "✗ Docker build failed. Reverting VERSION to $OLD_VERSION..."
             echo "$OLD_VERSION" > VERSION
             git add VERSION
             git commit -m "Revert version to $OLD_VERSION - build failed [skip ci]"
             git push origin main
-            echo "✓ VERSION has been reverted to $OLD_VERSION"
+            echo "VERSION has been reverted to $OLD_VERSION"
             exit 1
           fi
