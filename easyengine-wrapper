@@ -1,10 +1,28 @@
 #!/bin/sh
 if [ "$1" = "cli" ] && [ "$2" = "update" ]; then
-    sudo docker compose -f /opt/easyengine/docker-compose.yml pull
+    echo "YOU ARE USING THE EASYENGINE-DOCKER VERSION."
+    echo "- This update action will pull the latest Docker images."
+    echo "- To rollback to an older version, you need to change the image tags in /opt/easyengine/docker-compose.yml"
+    echo ""
+    
+    # Prompt for confirmation
+    printf "Do you want to proceed? [y/N]: "
+    read -r response
+    
+    case "$response" in
+        [yY][eE][sS]|[yY]) 
+            echo "Pulling latest Docker images..."
+            sudo docker compose -f /opt/easyengine/docker-compose.yml pull
+            ;;
+        *)
+            echo "Update cancelled."
+            exit 1
+            ;;
+    esac
     exit 0
 fi
 
-# Quote từng argument đúng cách trước khi truyền vào sh -c
+# Correctly quote each argument before passing to sh -c
 ARGS=$(printf ' %q' "$@")
 
 sudo docker compose -f /opt/easyengine/docker-compose.yml run --rm \
