@@ -46,47 +46,52 @@ jobs:
       - name: Sync & Patch Site-Command
         if: steps.check_version.outputs.run == 'true'
         run: |
+          # 1. Clone repo fork của bạn về máy ảo
           git clone https://x-access-token:${{ secrets.EE_DOCKER_AUTO_UPDATE_TOKEN }}@github.com/dinhngocdung/site-command.git sc
           cd sc
+          
+          # 2. Thêm remote upstream chỉ đến EasyEngine gốc
           git remote add upstream https://github.com/EasyEngine/site-command.git
           git fetch upstream
-          git reset --hard upstream/develop
           
-          # Dùng PHP để patch: đọc nội dung từ templates/site-utils-patch.txt
+          # 3. Đồng bộ hoàn toàn đưa local về trạng thái giống hệt master của repo gốc
+          git reset --hard upstream/master
+          
+          # 4. Tạo và chuyển sang nhánh mới ee-docker-custom từ master sạch này
+          git checkout -b ee-docker-custom
+
+          # 5. Dùng PHP để patch: đọc nội dung từ templates/site-utils-patch.txt
           php -r '
             $file = "src/helper/site-utils.php";
             $content = file_get_contents($file);
             $patch = file_get_contents("../main-docker/templates/site-utils-patch.txt");
-            
+
             // 1. Tìm vị trí bắt đầu của hàm cần thay thế
             $functionName = "function remove_etc_hosts_entry";
             $startPos = strpos($content, $functionName);
-            
-            if ($startPos === false) {
-                echo "Error: Function not found.\n"; exit(1);
-            }
+            if ($startPos === false) { echo "Error: Function not found.\n"; exit(1); }
 
             // 2. Tìm ngược lên trên để lấy phần DocBlock (ghi chú /**)
             $docBlockPos = strrpos(substr($content, 0, $startPos), "/**");
-            
+
             // 3. Tìm dấu đóng ngoặc nhọn "}" cuối cùng của hàm đó
-            // Chúng ta tìm dấu } đầu tiên sau vị trí hàm
             $endPos = strpos($content, "}", $startPos) + 1;
 
             // 4. Thực hiện thay thế đoạn từ $docBlockPos đến $endPos
             $before = substr($content, 0, $docBlockPos);
             $after = substr($content, $endPos);
-            
             $updated = $before . $patch . $after;
-            
+
             file_put_contents($file, $updated);
             echo "Patch applied precisely.\n";
           '
+
+          # 6. Commit và Force Push nhánh custom này lên repo fork của bạn
           git add .
           git commit -m "Auto-patch v${{ steps.check_version.outputs.ver }}: Docker compatibility [skip ci]"
-          git push origin develop --force
+          git push origin ee-docker-custom --force
 
-      # 3. XỬ LÝ EASYENGINE (PATCH COMPOSER & BUILD PHAR)
+      # 3. XỬ LÝ EASYENGINE (ĐỒNG BỘ MASTER GỐC, BUILD PHAR & ĐỢI KẾT QUẢ)
       - name: Sync & Patch EasyEngine
         if: steps.check_version.outputs.run == 'true'
         env:
@@ -94,41 +99,47 @@ jobs:
         run: |
           set -euo pipefail
 
+          # 1. Clone repo fork easyengine của bạn về máy ảo
           git clone https://x-access-token:${GH_TOKEN}@github.com/dinhngocdung/easyengine.git ee
           cd ee
+          
+          # 2. Đồng bộ sạch từ nhánh master của EasyEngine gốc
           git remote add upstream https://github.com/EasyEngine/easyengine.git
           git fetch upstream
-          git reset --hard upstream/develop
+          git reset --hard upstream/master
 
-          # Xóa file test_and_build.yml nếu tồn tại
+          # 3. Dọn dẹp file test_and_build.yml gốc (chứa khóa owner) để tránh xung đột
           if [ -f ".github/workflows/test_and_build.yml" ]; then
             rm .github/workflows/test_and_build.yml
             echo "Deleted old test_and_build.yml"
           fi
           
-          # Chép file workflow build phar từ template
+          # 4. Chép file cấu hình build .phar custom của bạn vào
           mkdir -p .github/workflows
           cp ../main-docker/templates/build.yml .github/workflows/build.yml
           
-          # Merge composer-patch.json vào file gốc
+          # 5. Patch file composer.json bằng jq để chỉ định dùng site-command (nhánh ee-docker-custom)
           jq -s '.[0] * .[1]' composer.json ../main-docker/templates/composer-patch.json > tmp.json && mv tmp.json composer.json
           
+          # 6. Cấu hình định danh Git & thực hiện ép push đè lên master của bạn
+          git config --local user.email "action@github.com"
+          git config --local user.name "EE-Update-Bot"
           git add .
-          git commit -m "Auto-sync v${{ steps.check_version.outputs.ver }}: Apply custom build config [skip ci]"
-          git push origin develop --force
+          git commit -m "Auto-sync v${{ steps.check_version.outputs.ver }}: Apply custom build config on master [skip ci]" || echo "No changes"
+          git push origin master --force
           
-          # Đợi build PHAR tại repo easyengine xong mới đi tiếp
+          # 7. LOGIC CŨ: Kích hoạt API và Đợi build PHAR tại repo easyengine xong mới đi tiếp
           OWNER="dinhngocdung"
           REPO="easyengine"
           WORKFLOW_FILE="build.yml"
-          REF="develop"
+          REF="master"  # ĐÃ ĐỔI TỪ develop SANG master ĐỂ ĐỒNG BỘ
           API="https://api.github.com"
           TOKEN="$GH_TOKEN"
 
           start_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "Dispatching workflow $WORKFLOW_FILE on $OWNER/$REPO@$REF (start_time=$start_time)..."
 
-          # Trigger workflow_dispatch
+          # Trigger workflow_dispatch qua API
           curl -s -X POST \
             -H "Authorization: token $TOKEN" \
             -H "Accept: application/vnd.github+json" \
@@ -136,9 +147,9 @@ jobs:
             -d "{\"ref\":\"$REF\"}"
 
           echo "Waiting for a workflow run to be created..."
-          # Find the run id that has head_branch == REF and created_at > start_time
+          # Vòng lặp tìm kiếm ID của run mới vừa được sinh ra
           run_id=""
-          for i in {1..60}; do        # ~ up to 10 minutes (60*10s); điều chỉnh nếu muốn
+          for i in {1..60}; do
             sleep 10
             runs_json=$(curl -s -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
               "$API/repos/$OWNER/$REPO/actions/runs?event=workflow_dispatch&per_page=50")
@@ -157,7 +168,7 @@ jobs:
             exit 1
           fi
 
-          # Poll the run status until completed
+          # Vòng lặp liên tục kiểm tra trạng thái (Polling) cho đến khi build xong hoàn toàn
           echo "Polling run $run_id status..."
           while true; do
             sleep 10

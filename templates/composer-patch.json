@@ -6,6 +6,6 @@
     }
   ],
   "require": {
-    "easyengine/site-command": "dev-develop"
+    "easyengine/site-command": "dev-ee-docker-custom"
   }
 }
