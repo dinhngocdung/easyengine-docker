@@ -106,26 +106,30 @@ jobs:
           # 2. Đồng bộ sạch từ nhánh master của EasyEngine gốc
           git remote add upstream https://github.com/EasyEngine/easyengine.git
           git fetch upstream
-          git reset --hard upstream/master
+          
+          # SỬA Ở ĐÂY: Tạo hẳn một nhánh master local và ép nó theo upstream/master
+          git checkout -B master upstream/master
 
           # 3. Dọn dẹp file test_and_build.yml gốc (chứa khóa owner) để tránh xung đột
           if [ -f ".github/workflows/test_and_build.yml" ]; then
             rm .github/workflows/test_and_build.yml
             echo "Deleted old test_and_build.yml"
           fi
-          
+
           # 4. Chép file cấu hình build .phar custom của bạn vào
           mkdir -p .github/workflows
           cp ../main-docker/templates/build.yml .github/workflows/build.yml
-          
+
           # 5. Patch file composer.json bằng jq để chỉ định dùng site-command (nhánh ee-docker-custom)
           jq -s '.[0] * .[1]' composer.json ../main-docker/templates/composer-patch.json > tmp.json && mv tmp.json composer.json
-          
+
           # 6. Cấu hình định danh Git & thực hiện ép push đè lên master của bạn
           git config --local user.email "action@github.com"
           git config --local user.name "EE-Update-Bot"
           git add .
           git commit -m "Auto-sync v${{ steps.check_version.outputs.ver }}: Apply custom build config on master [skip ci]" || echo "No changes"
+          
+          # Bảo đảm push nhánh master local lên nhánh master của origin
           git push origin master --force
           
           # 7. LOGIC CŨ: Kích hoạt API và Đợi build PHAR tại repo easyengine xong mới đi tiếp
