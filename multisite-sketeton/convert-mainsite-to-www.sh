@@ -10,6 +10,7 @@
 set -e
 
 # ====== CONFIG ======
+EE_BIN="/usr/local/bin/ee"
 DOMAIN="${1:-}"
 TEMPLATE_URL="https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/main/multisite-sketeton/nginx-redirect-override.conf.template"
 TEMPLATE_FILE="/tmp/nginx-redirect-override.conf.template"
@@ -23,11 +24,12 @@ success() { echo -e "${GREEN}✓ $1${NC}"; }
 error()   { echo -e "${RED}[ERROR] $1${NC}" >&2; exit 1; }
 warning() { echo -e "${YELLOW}[WARNING] $1${NC}" >&2; }
 
-# ====== ROOT CHECK ======
-[[ $EUID -ne 0 ]] && error "Script cần chạy với quyền root (sudo)."
-
-# ====== VALIDATE DOMAIN ======
-[[ -z "$DOMAIN" ]] && error "Usage: $0 <domain.com>"
+# ====== DOMAIN ======
+if [ -z "$DOMAIN" ]; then
+    read -p "Nhập domain gốc cần chuyển đổi (ví dụ: mu.kieuthi.com): " DOMAIN
+fi
+DOMAIN=$(echo "$DOMAIN" | tr '[:upper:]' '[:lower:]' | xargs)
+[[ -z "$DOMAIN" ]] && error "Domain không được để trống."
 if ! [[ "$DOMAIN" =~ ^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$ ]]; then
     error "Domain không hợp lệ: $DOMAIN"
 fi
@@ -51,13 +53,13 @@ echo ""
 read -p "Tiếp tục? [y/N]: " CONFIRM
 [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]] && { echo "Đã huỷ."; exit 0; }
 
-# ====== 1. UPDATE wp_site / wp_blogs (qua ee shell) ======
+# ====== 1. UPDATE wp_site / wp_blogs ======
 log "Cập nhật wp_site.domain và wp_blogs.domain (blog_id=1)..."
 
-ee shell "$DOMAIN" --command="wp db query \"UPDATE wp_site SET domain = '$WWW_DOMAIN' WHERE domain = '$DOMAIN';\" --allow-root" \
+"$EE_BIN" shell "$DOMAIN" --command="wp db query 'UPDATE wp_site SET domain = \"$WWW_DOMAIN\" WHERE domain = \"$DOMAIN\";' --allow-root" \
     || error "Update wp_site thất bại."
 
-ee shell "$DOMAIN" --command="wp db query \"UPDATE wp_blogs SET domain = '$WWW_DOMAIN' WHERE blog_id = 1;\" --allow-root" \
+"$EE_BIN" shell "$DOMAIN" --command="wp db query 'UPDATE wp_blogs SET domain = \"$WWW_DOMAIN\" WHERE blog_id = 1;' --allow-root" \
     || error "Update wp_blogs thất bại."
 
 success "Đã cập nhật wp_site / wp_blogs."
@@ -91,18 +93,17 @@ if curl -fsSL "$TEMPLATE_URL" -o "$TEMPLATE_FILE"; then
 
     success "Đã tạo: $OUTPUT_FILE"
 else
-    warning "Không tải được template từ GitHub — bỏ qua bước tạo file override. Tự tạo thủ công nếu cần."
+    warning "Không tải được template từ GitHub — bỏ qua bước tạo file override."
 fi
 
 # ====== 4. CLEAN + RELOAD SITE ======
 log "Chạy ee site clean và ee site reload..."
-ee site clean "$DOMAIN" || warning "ee site clean gặp lỗi, kiểm tra thủ công."
-ee site reload "$DOMAIN" || warning "ee site reload gặp lỗi, kiểm tra thủ công."
+"$EE_BIN" site clean "$DOMAIN" || warning "ee site clean gặp lỗi, kiểm tra thủ công."
+"$EE_BIN" site reload "$DOMAIN" || warning "ee site reload gặp lỗi, kiểm tra thủ công."
 success "Đã clean + reload site."
 
-# ====== RELOAD NGINX-PROXY ĐỂ ÁP DỤNG FILE OVERRIDE ======
 log "Reload nginx-proxy để áp dụng file override..."
-ee service reload nginx-proxy || warning "Reload nginx-proxy thất bại, kiểm tra thủ công."
+"$EE_BIN" service reload nginx-proxy || warning "Reload nginx-proxy thất bại, kiểm tra thủ công."
 
 # ====== TỔNG KẾT ======
 echo ""
@@ -112,9 +113,9 @@ echo "=========================================="
 cat << EOF
 
 ${GREEN}Kiểm tra lại:${NC}
-  ee shell $DOMAIN --command='wp site list --allow-root'
-  ee shell $DOMAIN --command='wp option get siteurl --allow-root'
-  ee shell $DOMAIN --command='wp option get home --allow-root'
+  $EE_BIN shell $DOMAIN --command='wp site list --allow-root'
+  $EE_BIN shell $DOMAIN --command='wp option get siteurl --allow-root'
+  $EE_BIN shell $DOMAIN --command='wp option get home --allow-root'
   curl -IL https://$DOMAIN/
   curl -IL https://$WWW_DOMAIN/
 
