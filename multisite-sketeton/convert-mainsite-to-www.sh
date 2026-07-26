@@ -11,7 +11,8 @@ set -e
 
 # ====== CONFIG ======
 DOMAIN="${1:-}"
-TEMPLATE_FILE="./nginx-redirect-override.conf.template"
+TEMPLATE_URL="https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/main/multisite-sketeton/nginx-redirect-override.conf.template"
+TEMPLATE_FILE="/tmp/nginx-redirect-override.conf.template"
 NGINX_CONF_DIR="/var/lib/docker/volumes/global-nginx-proxy_confd/_data"
 SITE_ROOT="/opt/easyengine/sites"
 
@@ -44,13 +45,13 @@ echo ""
 echo "Sẽ thực hiện các bước sau:"
 echo "  1. UPDATE wp_site / wp_blogs -> đổi domain Main Site sang $WWW_DOMAIN"
 echo "  2. Sửa DOMAIN_CURRENT_SITE trong wp-config.php"
-echo "  3. Tạo file override Nginx redirect (00-$DOMAIN-override.conf)"
+echo "  3. Tải template + tạo file override Nginx redirect (00-$DOMAIN-override.conf)"
 echo "  4. ee site clean $DOMAIN && ee site reload $DOMAIN"
 echo ""
 read -p "Tiếp tục? [y/N]: " CONFIRM
 [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]] && { echo "Đã huỷ."; exit 0; }
 
-# ====== 1. UPDATE wp_site / wp_blogs (qua ee shell, không cần docker exec) ======
+# ====== 1. UPDATE wp_site / wp_blogs (qua ee shell) ======
 log "Cập nhật wp_site.domain và wp_blogs.domain (blog_id=1)..."
 
 ee shell "$DOMAIN" --command="wp db query \"UPDATE wp_site SET domain = '$WWW_DOMAIN' WHERE domain = '$DOMAIN';\" --allow-root" \
@@ -71,9 +72,10 @@ else
 fi
 success "Đã cập nhật wp-config.php"
 
-# ====== 3. TẠO FILE OVERRIDE NGINX ======
-if [[ -f "$TEMPLATE_FILE" ]]; then
-    log "Tạo file override Nginx redirect..."
+# ====== 3. TẢI TEMPLATE + TẠO FILE OVERRIDE NGINX ======
+log "Tải template từ GitHub..."
+if curl -fsSL "$TEMPLATE_URL" -o "$TEMPLATE_FILE"; then
+    success "Đã tải template: $TEMPLATE_FILE"
 
     BACKEND_CONTAINER="$(echo "$DOMAIN" | tr -d '.-')-nginx-1"
     VAR_NAME="$(echo "$DOMAIN" | tr -d '.-')"
@@ -89,7 +91,7 @@ if [[ -f "$TEMPLATE_FILE" ]]; then
 
     success "Đã tạo: $OUTPUT_FILE"
 else
-    warning "Không tìm thấy $TEMPLATE_FILE — bỏ qua bước tạo file override. Tự tạo thủ công nếu cần."
+    warning "Không tải được template từ GitHub — bỏ qua bước tạo file override. Tự tạo thủ công nếu cần."
 fi
 
 # ====== 4. CLEAN + RELOAD SITE ======
