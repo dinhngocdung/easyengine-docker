@@ -1,0 +1,33 @@
+# --- {{BARE_DOMAIN}} (bare) -> luôn redirect sang www ---
+server {
+    listen 80;
+    server_name {{BARE_DOMAIN}};
+    return 301 https://{{WWW_DOMAIN}}$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name {{BARE_DOMAIN}};
+    ssl_certificate /etc/nginx/certs/{{CERT_NAME}}.crt;
+    ssl_certificate_key /etc/nginx/certs/{{CERT_NAME}}.key;
+    return 301 https://{{WWW_DOMAIN}}$request_uri;
+}
+
+# --- {{WWW_DOMAIN}} -> phục vụ nội dung thật ---
+server {
+    listen 80;
+    server_name {{WWW_DOMAIN}};
+    return 301 https://{{WWW_DOMAIN}}$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name {{WWW_DOMAIN}};
+    ssl_certificate /etc/nginx/certs/{{CERT_NAME}}.crt;
+    ssl_certificate_key /etc/nginx/certs/{{CERT_NAME}}.key;
+
+    set ${{VAR_NAME}}_backend http://{{BACKEND_CONTAINER}}:80;
+    location / {
+        proxy_pass ${{VAR_NAME}}_backend;
+    }
+}
