@@ -24,6 +24,15 @@ success() { echo -e "${GREEN}✓ $1${NC}"; }
 error()   { echo -e "${RED}[ERROR] $1${NC}" >&2; exit 1; }
 warning() { echo -e "${YELLOW}[WARNING] $1${NC}" >&2; }
 
+# ====== HELPER: chạy lệnh qua ee shell an toàn với escaping (base64) ======
+run_in_site() {
+    local site="$1"
+    local cmd="$2"
+    local enc
+    enc=$(echo -n "$cmd" | base64 -w0)
+    "$EE_BIN" shell "$site" --command="echo $enc | base64 -d | sh"
+}
+
 # ====== DOMAIN ======
 if [ -z "$DOMAIN" ]; then
     read -p "Nhập domain gốc cần chuyển đổi (ví dụ: mu.kieuthi.com): " DOMAIN
@@ -56,10 +65,12 @@ read -p "Tiếp tục? [y/N]: " CONFIRM
 # ====== 1. UPDATE wp_site / wp_blogs ======
 log "Cập nhật wp_site.domain và wp_blogs.domain (blog_id=1)..."
 
-"$EE_BIN" shell "$DOMAIN" --command="wp db query 'UPDATE wp_site SET domain = \"$WWW_DOMAIN\" WHERE domain = \"$DOMAIN\";' --allow-root" \
+SQL1="UPDATE wp_site SET domain = '$WWW_DOMAIN' WHERE domain = '$DOMAIN';"
+run_in_site "$DOMAIN" "wp db query \"$SQL1\" --allow-root" \
     || error "Update wp_site thất bại."
 
-"$EE_BIN" shell "$DOMAIN" --command="wp db query 'UPDATE wp_blogs SET domain = \"$WWW_DOMAIN\" WHERE blog_id = 1;' --allow-root" \
+SQL2="UPDATE wp_blogs SET domain = '$WWW_DOMAIN' WHERE blog_id = 1;"
+run_in_site "$DOMAIN" "wp db query \"$SQL2\" --allow-root" \
     || error "Update wp_blogs thất bại."
 
 success "Đã cập nhật wp_site / wp_blogs."
