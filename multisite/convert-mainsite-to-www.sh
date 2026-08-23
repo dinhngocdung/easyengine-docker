@@ -12,7 +12,7 @@ set -e
 # ====== CONFIG ======
 EE_BIN="/usr/local/bin/ee"
 DOMAIN="${1:-}"
-TEMPLATE_URL="https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/main/multisite-sketeton/nginx-redirect-override.conf.template"
+TEMPLATE_URL="https://raw.githubusercontent.com/dinhngocdung/easyengine-docker/main/multisite/nginx-redirect-override.conf.template"
 TEMPLATE_FILE="/tmp/nginx-redirect-override.conf.template"
 NGINX_CONF_DIR="/var/lib/docker/volumes/global-nginx-proxy_confd/_data"
 SITE_ROOT="/opt/easyengine/sites"
