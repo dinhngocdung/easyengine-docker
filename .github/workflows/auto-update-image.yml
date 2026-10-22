@@ -57,8 +57,8 @@ jobs:
           # 3. Đồng bộ hoàn toàn đưa local về trạng thái giống hệt master của repo gốc
           git reset --hard upstream/master
           
-          # 4. Tạo và chuyển sang nhánh mới ee-docker-custom từ master sạch này
-          git checkout -b ee-docker-custom
+          # 4. Tạo và chuyển sang nhánh ee-docker-custom (ghi đè nếu đã tồn tại)
+          git checkout -B ee-docker-custom
 
           # 5. Dùng PHP để patch: đọc nội dung từ templates/site-utils-patch.txt
           php -r '
