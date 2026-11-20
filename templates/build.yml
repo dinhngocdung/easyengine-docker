@@ -5,6 +5,20 @@ on:
   #  branches: [ "master" ]
   workflow_dispatch:
 
+# Cần quyền ghi để push tag và tạo/cập nhật Release bằng GITHUB_TOKEN
+permissions:
+  contents: write
+
+env:
+  # Bỏ qua security advisory của các package bị ghim phiên bản cũ (copy từ workflow gốc).
+  # Cần vì ta xóa composer.lock nên Composer phải giải lại dependency (composer update).
+  ADVISORY_IGNORE: >-
+    {"symfony/yaml": {"constraint": "4.4.*", "reason": "pinned by core and behat/behat 3.8.1", "on-audit": false},
+    "guzzlehttp/psr7": {"constraint": "1.9.*", "reason": "required by acmephp/core 1.3.0", "on-audit": false},
+    "guzzlehttp/guzzle": {"constraint": "7.8.*", "reason": "last guzzle 7 line that accepts guzzlehttp/psr7 1.x", "on-audit": false},
+    "symfony/config": {"constraint": "4.4.*", "reason": "pinned by core and behat/behat 3.8.1", "on-audit": false},
+    "symfony/serializer": {"constraint": "3.4.20", "reason": "pinned by site-command", "on-audit": false}}
+
 jobs:
   build:
     name: Build Phar
@@ -16,6 +30,7 @@ jobs:
       - name: Clean environment
         run: |
           rm -rf vendor composer.lock
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -29,15 +44,20 @@ jobs:
           composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
           composer config --global --auth github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
           composer config -g repo.packagist composer https://packagist.org
+
       - name: Install dependencies
         run: |
-          composer install --prefer-dist --no-dev --no-progress --no-interaction --optimize-autoloader
+          # Không còn composer.lock => dùng update, kèm danh sách ignore advisory
+          composer config --json --merge policy.advisories.ignore "$ADVISORY_IGNORE"
+          composer update --prefer-dist --no-dev --no-progress --no-interaction --optimize-autoloader
           composer dump-autoload --optimize --classmap-authoritative
+
       - name: Prepare for PHAR build
         run: |
           # Copy required files to temporary directory
           mkdir -p phar-build
           cp -r php bin utils VERSION vendor phar-build/
+
       - name: Build uncompressed PHAR
         run: |
           cd phar-build
@@ -45,11 +65,11 @@ jobs:
           chmod +x easyengine.phar
           mv easyengine.phar ../
           cd ..
+
       - name: Test PHAR
         run: |
           php easyengine.phar cli info
-          
-      # Bước mới: Đọc nội dung file VERSION
+
       - name: Read VERSION file content
         id: get_version
         run: echo "VERSION_CONTENT=$(cat VERSION)" >> $GITHUB_OUTPUT
@@ -57,22 +77,18 @@ jobs:
       - name: Create Git tag
         id: tag
         run: |
-          # Lấy version từ file
           VERSION_FROM_FILE="${{ steps.get_version.outputs.VERSION_CONTENT }}"
           TAG_NAME="${VERSION_FROM_FILE}-custom"
           echo "TAG=${TAG_NAME}" >> $GITHUB_OUTPUT
-          
-          # Cấu hình Git để có thể thực hiện lệnh tag
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # Xóa tag cục bộ nếu có
           git tag -d "${TAG_NAME}" || true
-          
-          # Tạo tag mới
+
+          # Tạo tag mới và đẩy lên remote (--force để ghi đè nếu đã tồn tại)
           git tag "${TAG_NAME}"
-          
-          # Đẩy tag lên Remote (sử dụng --force để ghi đè nếu tag đã tồn tại)
           git push origin "${TAG_NAME}" --force
 
       - name: Create / Update Release
