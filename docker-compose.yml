@@ -13,4 +13,5 @@ services:
       - /opt/easyengine/.ssh-key:/root/.ssh
       - /opt/easyengine/config/rclone:/root/.config/rclone
       - /etc/hosts:/etc/hosts
+      - /etc/logrotate.d:/etc/logrotate.d
     network_mode: host

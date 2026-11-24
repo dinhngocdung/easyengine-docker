@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     php-sqlite3 \
     php-zip \
     php-posix \
+    logrotate \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install docker-compose v2.27.0
