@@ -22,7 +22,7 @@ jobs:
         id: check_version
         run: |
           # Lấy version từ dự án gốc EasyEngine
-          REMOTE=$(curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/develop/VERSION | xargs)
+          REMOTE=$(curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/master/VERSION | xargs)
           # Lấy version hiện tại trong repo docker của bạn
           LOCAL=$(cat main-docker/VERSION | xargs)
           
@@ -208,7 +208,7 @@ jobs:
           echo "Saved old version: $OLD_VERSION"
           
           # Đồng bộ VERSION trực tiếp từ repo EasyEngine gốc
-          curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/develop/VERSION -o VERSION
+          curl -s https://raw.githubusercontent.com/EasyEngine/easyengine/master/VERSION -o VERSION
           NEW_VERSION=$(cat VERSION | xargs)
           echo "New version fetched: $NEW_VERSION"
           
