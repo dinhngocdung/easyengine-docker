@@ -1,7 +1,7 @@
 diff --git a/php/EE/Logrotate/Utils.php b/php/EE/Logrotate/Utils.php
 --- a/php/EE/Logrotate/Utils.php
 +++ b/php/EE/Logrotate/Utils.php
-@@ -681,9 +681,9 @@
+@@ -681,10 +681,10 @@
      compress
      delaycompress
      notifempty
@@ -10,18 +10,19 @@ diff --git a/php/EE/Logrotate/Utils.php b/php/EE/Logrotate/Utils.php
      postrotate
 -        docker ps -q -f label=io.easyengine.site -f label=com.docker.compose.service=nginx | xargs -r docker kill -s USR1 >/dev/null || true
 -        docker ps -q -f label=io.easyengine.site -f label=com.docker.compose.service=php | xargs -r docker kill -s USR1 >/dev/null || true
-+        printf '%s LogRotate.INFO: Daily rotate site logs\n' "$(date '+[%d/%m/%Y %H:%M:%S]')" >> {$root_dir}/logs/ee.log || true
++        printf '%s LogRotate.INFO: Daily rotate site logs\\n' "$(date '+[%d/%m/%Y %H:%M:%S]')" >> {$root_dir}/logs/ee.log || true
      endscript
  }
  LOGROTATE
-@@ -713,7 +713,8 @@
+@@ -713,9 +713,10 @@
+     compress
      delaycompress
      notifempty
      sharedscripts
 +    copytruncate
      postrotate
 -        docker ps -q -f label=com.docker.compose.service=global-nginx-proxy | xargs -r -I{} docker exec {} nginx -s reopen >/dev/null || true
-+        printf '%s LogRotate.INFO: Daily rotate nginx-proxy logs\n' "$(date '+[%d/%m/%Y %H:%M:%S]')" >> {$root_dir}/logs/ee.log || true
++        printf '%s LogRotate.INFO: Daily rotate nginx-proxy logs\\n' "$(date '+[%d/%m/%Y %H:%M:%S]')" >> {$root_dir}/logs/ee.log || true
      endscript
  }
  LOGROTATE
