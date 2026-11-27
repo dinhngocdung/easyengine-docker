@@ -123,6 +123,10 @@ jobs:
           # 5. Patch file composer.json bằng jq để chỉ định dùng site-command (nhánh ee-docker-custom)
           jq -s '.[0] * .[1]' composer.json ../main-docker/templates/composer-patch.json > tmp.json && mv tmp.json composer.json
 
+          # 5B. Patch file logrotate sử dụng copytrunce để tránh dùng docker
+          git apply --check ../main-docker/templates/logrotate-utils.patch
+          git apply ../main-docker/templates/logrotate-utils.patch
+
           # 6. Cấu hình định danh Git & thực hiện ép push đè lên master của bạn
           git config --local user.email "action@github.com"
           git config --local user.name "EE-Update-Bot"
