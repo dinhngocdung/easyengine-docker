@@ -123,7 +123,7 @@ jobs:
           # 5. Patch file composer.json bằng jq để chỉ định dùng site-command (nhánh ee-docker-custom)
           jq -s '.[0] * .[1]' composer.json ../main-docker/templates/composer-patch.json > tmp.json && mv tmp.json composer.json
 
-          # 5B. Patch file logrotate sử dụng copytrunce để tránh dùng docker
+          # 5B. Patch logrotate: copytruncate và ghi thông báo vào ee.log
           git apply --check ../main-docker/templates/logrotate-utils.patch
           git apply ../main-docker/templates/logrotate-utils.patch
 

@@ -1,7 +1,7 @@
 diff --git a/php/EE/Logrotate/Utils.php b/php/EE/Logrotate/Utils.php
 --- a/php/EE/Logrotate/Utils.php
 +++ b/php/EE/Logrotate/Utils.php
-@@ -681,10 +681,10 @@ private static function get_sites_config() {
+@@ -681,9 +681,9 @@
      compress
      delaycompress
      notifempty
@@ -14,8 +14,7 @@ diff --git a/php/EE/Logrotate/Utils.php b/php/EE/Logrotate/Utils.php
      endscript
  }
  LOGROTATE
-@@ -713,9 +713,10 @@ private static function get_nginx_proxy_config() {
-     compress
+@@ -713,7 +713,8 @@
      delaycompress
      notifempty
      sharedscripts
