@@ -124,8 +124,8 @@ jobs:
           jq -s '.[0] * .[1]' composer.json ../main-docker/templates/composer-patch.json > tmp.json && mv tmp.json composer.json
 
           # 5B. Patch logrotate: copytruncate và ghi thông báo vào ee.log
-          git apply --check ../main-docker/templates/logrotate-utils.patch
-          git apply ../main-docker/templates/logrotate-utils.patch
+          php ../main-docker/templates/patch-logrotate.php
+          php -l php/EE/Logrotate/Utils.php
 
           # 6. Cấu hình định danh Git & thực hiện ép push đè lên master của bạn
           git config --local user.email "action@github.com"
